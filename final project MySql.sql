@@ -73,3 +73,27 @@ group by customer_id) as total_orders
 on customers_cleaned.customer_id = total_orders.customer_id
 order by total_order desc;
 
+-- rolling sum - total orders
+select a.order_id, customers_cleaned.customer_id, first_name, last_name, total_order,
+sum(total_order) over(order by a.order_id) as sum_all_orders
+from car_orders_cleaned a
+join 
+(select order_id, car_orders_cleaned.customer_id, order_date, quantity*price as total_order
+from car_orders_cleaned) as total_orders
+on a.order_id = total_orders.order_id
+left join customers_cleaned
+on customers_cleaned.customer_id = a.customer_id
+order by a.order_id;
+
+
+-- rolling sum - total orders by customer
+select a.order_id, customers_cleaned.customer_id, first_name, last_name, total_order,
+sum(total_order) over(partition by a.customer_id order by a.order_id) as total_order_customer
+from car_orders_cleaned a
+join 
+(select order_id, car_orders_cleaned.customer_id, order_date, quantity*price as total_order
+from car_orders_cleaned) as total_orders
+on a.order_id = total_orders.order_id
+left join customers_cleaned
+on customers_cleaned.customer_id = a.customer_id
+order by a.customer_id, a.order_id;
